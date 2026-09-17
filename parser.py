@@ -4,17 +4,11 @@ from collections.abc import Sequence
 
 from Lexer import Token, TokenKind
 from ast_nodes import (
-    Block,
-    Expr,
-    FunctionDecl,
-    Node,
-    Parameter,
-    PrintItem,
-    Program,
-    SourceSpan,
-    Stmt,
-    StringLiteral,
-    TypeName,
+    Block, Expr, FunctionDecl, Node, Parameter, PrintItem, Program, 
+    SourceSpan, Stmt, StringLiteral, TypeName,
+    VarDecl, Assignment, CallStmt, IfStmt, WhileStmt, ReturnStmt, 
+    PrintStmt, BinaryExpr, UnaryExpr, CallExpr, IdentifierExpr, 
+    IntLiteral, BoolLiteral, BinaryOperator, UnaryOperator
 )
 
 
@@ -172,16 +166,44 @@ class Parser:
         return TYPE_BY_TOKEN[token.kind]
 
     def parse_parameter_list(self) -> list[Parameter]:
-        raise NotImplementedError("implemente parameter_list")
+        params = [self.parse_parameter()]
+        while self.match(TokenKind.COMMA):
+            params.append(self.parse_parameter())
+        return params
 
     def parse_parameter(self) -> Parameter:
-        raise NotImplementedError("implemente parameter")
+        start = self.peek()
+        param_type = self.parse_type()
+        name_token = self.expect(TokenKind.IDENTIFIER)
+        return Parameter(param_type, name_token.lexeme, span=self.span(start, name_token))
 
     def parse_block(self) -> Block:
-        raise NotImplementedError("implemente block")
+        start = self.expect(TokenKind.LEFT_BRACE)
+        statements = []
+        #le os statements ate encontrar a chave fechando o fim do arquivo
+        while not self.check(TokenKind.RIGHT_BRACE) and not self.check(TokenKind.EOF):
+            statements.append(self.parse_statement())
+        end = self.expect(TokenKind.RIGHT_BRACE)
+        return Block(statements, span=self._span(start, end))
 
     def parse_statement(self) -> Stmt:
-        raise NotImplementedError("implemente statement")
+        token = self.peak()
+        if token.kind in TYPE_START:
+            return self.parse_declaration()
+        elif token.kind == TokenKind.KW_IF:
+            return self.parse_if_statement()
+        elif token.kind == TokenKind.KW_WHILE:
+            return self.parse_while_statement()
+        elif token.kind == TokenKind.KW_RETURN:
+            return self.parse_return_statement()
+        elif token.kind == TokenKind.KW_PRINT:
+            return self.parse_print_statement()
+        elif token.kind == TokenKind.LEFT_BRACE:
+            return self.parse_block()
+        elif token.kind == TokenKind.IDENTIFIER:
+            return self.parse_id_or_call_statement()
+        else:
+            raise ParserError(token, STATEMENT_START)
 
     def parse_id_or_call_statement(self) -> Stmt:
         raise NotImplementedError("implemente id_or_call_statement")
