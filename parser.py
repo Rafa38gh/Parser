@@ -175,7 +175,7 @@ class Parser:
         start = self.peek()
         param_type = self.parse_type()
         name_token = self.expect(TokenKind.IDENTIFIER)
-        return Parameter(param_type, name_token.lexeme, span=self.span(start, name_token))
+        return Parameter(param_type, name_token.lexeme, span=self._span(start, name_token))
 
     def parse_block(self) -> Block:
         start = self.expect(TokenKind.LEFT_BRACE)
@@ -187,7 +187,7 @@ class Parser:
         return Block(statements, span=self._span(start, end))
 
     def parse_statement(self) -> Stmt:
-        token = self.peak()
+        token = self.peek()
         if token.kind in TYPE_START:
             return self.parse_declaration()
         elif token.kind == TokenKind.KW_IF:
@@ -206,7 +206,25 @@ class Parser:
             raise ParserError(token, STATEMENT_START)
 
     def parse_id_or_call_statement(self) -> Stmt:
-        raise NotImplementedError("implemente id_or_call_statement")
+        name_token = self.expect(TokenKind.IDENTIFIER)
+        if self.match(TokenKind.ASSIGN):
+
+            target = IdentifierExpr( name_token.lexeme, span=self._token_span(name_token),)
+            value = self.parse_expression();
+            end = self.expect(TokenKind.SEMICOLON)
+
+            return Assignment(target, value, span=self._span(name_token, end))
+
+        self.expect(TokenKind.LEFT_PAREN)
+
+        arguments = self.parse_arguments()
+
+        close_paren = self.expect(TokenKind.RIGHT_PAREN)
+
+        call = CallExpr(name_token.lexeme, arguments, span=self._span(name_token, close_paren),)
+        end = self.expect(TokenKind.SEMICOLON)
+        return CallStmt(call, span=self._span(name_token, end))
+
 
     def parse_declaration(self) -> Stmt:
         raise NotImplementedError("implemente declaration")
