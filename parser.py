@@ -227,7 +227,18 @@ class Parser:
 
 
     def parse_declaration(self) -> Stmt:
-        raise NotImplementedError("implemente declaration")
+        start = self.peek();
+        var_type = self.parse_type()
+        name_token = self.expect(TokenKind.IDENTIFIER)
+
+        if self.match(TokenKind.ASSIGN) :
+            initializer = self.parse_expression
+        else :
+            initializer = None
+
+        end = self.expect(TokenKind.SEMICOLON)
+
+        return VarDecl (var_type,name_token.lexeme, initializer, span=self._span(start, end))
 
     def parse_if_statement(self) -> Stmt:
         raise NotImplementedError("implemente if_statement")
