@@ -241,7 +241,23 @@ class Parser:
         return VarDecl (var_type,name_token.lexeme, initializer, span=self._span(start, end))
 
     def parse_if_statement(self) -> Stmt:
-        raise NotImplementedError("implemente if_statement")
+        start = self.expect(TokenKind.KW_IF)
+
+        self.expect(TokenKind.LEFT_PAREN)
+        condition = self.parse_expression()
+        self.expect(TokenKind.RIGHT_PAREN)
+
+        then_block = self.parse_block();
+        if self.match(TokenKind.KW_ELSE):
+            else_block = self.parse_block()
+        else :
+            else_block = None
+
+        if else_block != None :
+            end = else_block
+        else:
+            end = then_block
+        return IfStmt(condition, then_block, else_block, span=self._span(start, end))
 
     def parse_while_statement(self) -> Stmt:
         raise NotImplementedError("implemente while_statement")
